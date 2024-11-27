@@ -1,0 +1,18 @@
+modules:
+  bitbucket:repoPullRequestCard:
+    - key: hello-world-app-hello-world-pull-request-card
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: hello-world-app
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  runtime:
+    name: nodejs20.x
+  id: ari:cloud:ecosystem::app/a0115d4e-03b0-4907-a68a-db1235f2c0fe
