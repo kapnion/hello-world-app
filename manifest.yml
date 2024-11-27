@@ -16,3 +16,6 @@ app:
   runtime:
     name: nodejs20.x
   id: ari:cloud:ecosystem::app/a0115d4e-03b0-4907-a68a-db1235f2c0fe
+permissions:
+  scopes:
+    - read:pullrequest:bitbucket

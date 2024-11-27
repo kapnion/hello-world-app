@@ -1,16 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Text } from '@forge/react';
+import ForgeReconciler, { Text, Fragment } from '@forge/react';
 import { invoke } from '@forge/bridge';
 const App = () => {
-  const [data, setData] = useState(null);
+  const [pullRequests, setPullRequests] = useState(null);
   useEffect(() => {
-    invoke('getText', { example: 'my-invoke-variable' }).then(setData);
+    invoke('getPullRequests').then(setPullRequests);
   }, []);
   return (
-    <>
-      <Text>Hello world!</Text>
-      <Text>{data ? data : 'Loading...'}</Text>
-    </>
+    <Fragment style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <Text variant="heading">Pull Requests</Text>
+      {pullRequests ? (
+        pullRequests.map(pr => (
+          <Fragment key={pr.id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px', borderRadius: '5px' }}>
+            <Text variant="subheading">{pr.title}</Text>
+            <Text><strong>Author:</strong> {pr.author.display_name}</Text>
+            <Text><strong>Status:</strong> {pr.state}</Text>
+            <Text>
+              <a href={pr.links.html.href} target="_blank" rel="noopener noreferrer">View on Bitbucket</a>
+            </Text>
+          </Fragment>
+        ))
+      ) : (
+        <Text>Loading...</Text>
+      )}
+    </Fragment>
   );
 };
 ForgeReconciler.render(
