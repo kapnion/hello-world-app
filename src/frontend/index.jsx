@@ -1,29 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Text, Fragment } from '@forge/react';
+import ForgeReconciler, { Text, View } from '@forge/react';
 import { invoke } from '@forge/bridge';
 const App = () => {
-  const [pullRequests, setPullRequests] = useState(null);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    invoke('getPullRequests').then(setPullRequests);
+    invoke('getPullRequests')
+      .then((res) => {
+        console.log("res", res);
+        setData(res);
+      })
+      .catch(setError);
   }, []);
+
+  if (error) {
+    console.error('Error fetching pull requests:', error);
+    return <Text>Error loading data</Text>;
+  }
+
   return (
-    <Fragment style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <Text variant="heading">Pull Requests</Text>
-      {pullRequests ? (
-        pullRequests.map(pr => (
-          <Fragment key={pr.id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px', borderRadius: '5px' }}>
-            <Text variant="subheading">{pr.title}</Text>
-            <Text><strong>Author:</strong> {pr.author.display_name}</Text>
-            <Text><strong>Status:</strong> {pr.state}</Text>
-            <Text>
-              <a href={pr.links.html.href} target="_blank" rel="noopener noreferrer">View on Bitbucket</a>
-            </Text>
-          </Fragment>
-        ))
+    <>
+      <Text>Hello world!</Text>
+      {data ? (
+        <Text>{JSON.stringify(data, null, 2)}</Text>
       ) : (
         <Text>Loading...</Text>
       )}
-    </Fragment>
+    </>
   );
 };
 ForgeReconciler.render(
