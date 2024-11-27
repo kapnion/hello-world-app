@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Box, Text, Link } from '@forge/react';
+import ForgeReconciler, { Box, Text, Link, Button, User } from '@forge/react'; // Import User
 import { invoke } from '@forge/bridge';
 
 const getPartyMessage = (pr) => {
@@ -11,6 +11,29 @@ const getPartyMessage = (pr) => {
     "⏳ Time Traveler Alert! This PR is ahead of its time! 🕰️"
   ];
   return themes[Math.floor(Math.random() * themes.length)];
+};
+
+const getAchievement = (pr) => {
+  if (pr.state === 'MERGED') {
+    return "Merge Unicorn: For a PR that's perfectly merged with no conflicts.";
+  }
+  if (pr.title.toLowerCase().includes('fix')) {
+    return "Bug Fixing Ninja: For a PR that resolves multiple bugs.";
+  }
+  if (pr.title.toLowerCase().includes('refactor')) {
+    return "Code Refactor Master: For a PR that refactors a large chunk of code.";
+  }
+  return null;
+};
+
+const getMilestone = (pr) => {
+  if (pr.state === 'OPEN') {
+    return "Code Review Party! 🎉";
+  }
+  if (pr.state === 'MERGED') {
+    return "The Big Merge! 🎊";
+  }
+  return null;
 };
 
 const App = () => {
@@ -42,7 +65,7 @@ const App = () => {
           {data.values.map((pr, index) => (
             <Box key={index} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
               <Text style={{ fontWeight: 'bold' }}>Title: {pr.title}</Text>
-              <Text>Author: {pr.author.display_name}</Text>
+              <User accountId={pr.author.account_id} /> {/* Use User component */}
               <Text>Status: {pr.state}</Text>
               <Text>Created At: {pr.created_on}</Text>
               <Text>Source Branch: {pr.source.branch.name}</Text>
@@ -53,6 +76,10 @@ const App = () => {
               </Link>
               <Box style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f0f8ff', borderRadius: '5px' }}>
                 <Text>{getPartyMessage(pr)}</Text>
+                {getAchievement(pr) && <Text style={{ marginTop: '5px', fontStyle: 'italic' }}>{getAchievement(pr)}</Text>}
+                {getMilestone(pr) && <Text style={{ marginTop: '5px', fontStyle: 'italic' }}>{getMilestone(pr)}</Text>}
+                <Button onClick={() => alert('🎉 Let’s merge this PR with a celebration dance! 💃')} >
+                🎉 React"</Button>
               </Box>
             </Box>
           ))}
