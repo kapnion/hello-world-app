@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Box, Text, Link, Button, User } from '@forge/react'; // Import User
+import ForgeReconciler, { Box, Text, Link, Button, User, Textfield, Label, RequiredAsterisk } from '@forge/react';
 import { invoke } from '@forge/bridge';
 
 const getPartyMessage = (pr) => {
@@ -39,8 +39,19 @@ const getMilestone = (pr) => {
 const App = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [reaction, setReaction] = useState('');
+  const [reactions, setReactions] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    invoke('getCurrentUser')
+      .then((user) => {
+        setCurrentUser(user);
+      })
+      .catch((err) => {
+        console.error('Error fetching current user:', err);
+      });
+
     invoke('getPullRequests')
       .then((res) => {
         console.log("res", res); // Inspect the data structure
@@ -50,7 +61,23 @@ const App = () => {
         console.error('Error fetching pull requests:', err);
         setError(err);
       });
+
+    invoke('getReactions')
+      .then((res) => {
+        console.log("fetched reactions", res); // Log fetched reactions
+        setReactions(res);
+      })
+      .catch((err) => {
+        console.error('Error fetching reactions:', err);
+      });
   }, []);
+
+  const handleReactionSubmit = async (prId) => {
+    const newReactions = { ...reactions, [prId]: { user: currentUser, reaction } };
+    setReactions(newReactions);
+    await invoke('saveReaction', { prId, reaction, user: currentUser });
+    setReaction('');
+  };
 
   if (error) {
     console.error('Error fetching pull requests:', error);
@@ -59,27 +86,47 @@ const App = () => {
 
   return (
     <>
-      <Text>Hello world!</Text>
+      <Text style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>Hello world!</Text>
       {data ? (
-        <Box>
+        <Box style={{ padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '10px' }}>
           {data.values.map((pr, index) => (
-            <Box key={index} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
-              <Text style={{ fontWeight: 'bold' }}>Title: {pr.title}</Text>
-              <User accountId={pr.author.account_id} /> {/* Use User component */}
+            <Box key={index} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '10px', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+              <Text style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}>Title: {pr.title}</Text>
+              <User accountId={pr.author.account_id} style={{ marginBottom: '5px' }} /> {/* Use User component */}
               <Text>Status: {pr.state}</Text>
-              <Text>Created At: {pr.created_on}</Text>
+              <Text>Created At: {new Date(pr.created_on).toLocaleString()}</Text>
               <Text>Source Branch: {pr.source.branch.name}</Text>
               <Text>Destination Branch: {pr.destination.branch.name}</Text>
               <Text>Repository: {pr.destination.repository.full_name}</Text>
-              <Link href={pr.links.html.href} target="_blank" rel="noopener noreferrer">
+              <Link href={pr.links.html.href} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'none', marginTop: '10px', display: 'block' }}>
                 View Pull Request
               </Link>
-              <Box style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f0f8ff', borderRadius: '5px' }}>
+              <Box style={{ marginTop: '10px', padding: '10px', backgroundColor: '#e6f7ff', borderRadius: '5px' }}>
                 <Text>{getPartyMessage(pr)}</Text>
                 {getAchievement(pr) && <Text style={{ marginTop: '5px', fontStyle: 'italic' }}>{getAchievement(pr)}</Text>}
                 {getMilestone(pr) && <Text style={{ marginTop: '5px', fontStyle: 'italic' }}>{getMilestone(pr)}</Text>}
-                <Button onClick={() => alert('🎉 Let’s merge this PR with a celebration dance! 💃')} >
-                🎉 React"</Button>
+                <Button onClick={() => alert('🎉 Let’s merge this PR with a celebration dance! 💃')} style={{ marginTop: '10px', backgroundColor: '#28a745', color: '#fff' }}>
+                  🎉 React
+                </Button>
+                <Label labelFor="textfield">
+                  Add a reaction
+                  <RequiredAsterisk />
+                </Label>
+                <Textfield
+                  appearance="standard"
+                  placeholder="Add your reaction"
+                  value={reaction}
+                  onChange={(e) => setReaction(e.target.value)}
+                  style={{ marginTop: '10px' }}
+                />
+                <Button onClick={() => handleReactionSubmit(pr.id)} style={{ marginTop: '10px', backgroundColor: '#007bff', color: '#fff' }}>
+                  Submit Reaction
+                </Button>
+                {Object.keys(reactions).length > 0 && reactions[pr.id] && (
+                  <Text style={{ marginTop: '10px', fontStyle: 'italic' }}>
+                    Reaction: {reactions[pr.id].reaction} by {reactions[pr.id].user.displayName}
+                  </Text>
+                )}
               </Box>
             </Box>
           ))}
